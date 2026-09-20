@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cedar2025/xboard-node/internal/config"
+	"github.com/kele812/XBnpp/internal/config"
 )
 
 const (

@@ -8,15 +8,14 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-APP_NAME="xbn plus ++"
-INSTALL_ROOT="/etc/XboardNode-Plus"
-LEGACY_INSTALL_ROOT="/etc/xboard-node"
+APP_NAME="XBnpp"
+INSTALL_ROOT="/etc/XBnpp"
 BACKUP_DIR="${INSTALL_ROOT}/backups"
 INSTALL_META="${INSTALL_ROOT}/install-meta.json"
 CONFIG_FILE="${INSTALL_ROOT}/config.yml"
 CREDENTIALS_FILE="${INSTALL_ROOT}/credentials.env"
-BINARY_PATH="/usr/local/bin/xboard-node"
-SERVICE_NAME="xboard-node.service"
+BINARY_PATH="/usr/local/bin/XBnpp"
+SERVICE_NAME="XBnpp.service"
 SERVICE_PATH="/etc/systemd/system/${SERVICE_NAME}"
 CLI_PATH="/usr/local/bin/xbctl"
 INSTALLER_COPY_PATH="${INSTALL_ROOT}/install.sh"
@@ -28,12 +27,13 @@ DEFAULT_ACTION="install"
 DEFAULT_RELEASE_VERSION="latest"
 DEFAULT_LOG_LEVEL="info"
 DEFAULT_KERNEL_LOG_LEVEL="warn"
-DEFAULT_DOWNLOAD_BASE="https://github.com/kele812/xbn-plus-plus/releases"
+DEFAULT_DOWNLOAD_BASE="https://github.com/kele812/XBnpp/releases"
 
 ACTION="${DEFAULT_ACTION}"
 MODE=""
 PANEL_URL=""
 TOKEN=""
+WATCH_ARGS=()
 NODE_ID=""
 NODE_TYPE=""
 MACHINE_ID=""
@@ -96,8 +96,8 @@ load_health_port_from_config() {
 rollback_install() {
     log_warn "Rolling back installation"
     if [ -n "$BACKUP_PATH" ] && [ -d "$BACKUP_PATH" ]; then
-        if [ -f "$BACKUP_PATH/xboard-node" ]; then
-            install -m 755 "$BACKUP_PATH/xboard-node" "$BINARY_PATH"
+        if [ -f "$BACKUP_PATH/XBnpp" ]; then
+            install -m 755 "$BACKUP_PATH/XBnpp" "$BINARY_PATH"
         else
             rm -f "$BINARY_PATH"
         fi
@@ -161,7 +161,7 @@ trap cleanup_tmp EXIT
 usage() {
     cat <<'HELP'
 
-  xbn plus ++ Installer
+  XBnpp Installer
 
   ACTIONS:
     install      Install or reconcile the configured deployment (default)
@@ -182,19 +182,22 @@ usage() {
   REQUIRED FOR MACHINE MODE:
     --panel, -a       Panel URL
     --token, -t       Machine token
+    --watch-url       SubscriptionWatch HTTPS origin (optional; requires all three watch flags)
+    --watch-node      Collector node identifier (48 hex characters)
+    --watch-secret    Collector secret (48 hex characters)
     --machine-id      Machine ID
 
   OPTIONAL:
     --node-type, -T     Explicit node type for node mode
     --kernel, -k        auto, singbox or xray (default: auto)
     --version           Release version or latest (default: latest)
-    --binary            Use a local xboard-node binary path instead of downloading
+    --binary            Use a local XBnpp binary path instead of downloading
     --xbctl-binary      Use a local xbctl binary path instead of downloading
     --health-port       Local health port (default: 65530, use 0 to disable)
     --gomemlimit        Runtime GOMEMLIMIT value, e.g. 256MiB
     --gogc              Runtime GOGC value, e.g. 50
     --force-reconfigure Overwrite an existing install even if mode/target changed
-    --purge             With uninstall, delete /etc/XboardNode-Plus too
+    --purge             With uninstall, delete /etc/XBnpp too
     --yes, -y           Non-interactive confirmation for destructive operations
 
   EXAMPLES:
@@ -224,6 +227,14 @@ parse_args() {
                 ;;
             --token|-t)
                 TOKEN="$2"
+                shift 2
+                ;;
+            --watch-url|--watch-node|--watch-secret)
+                if [ "$#" -lt 2 ] || [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    log_error "$1 requires a value"
+                    exit 1
+                fi
+                WATCH_ARGS+=("$1" "$2")
                 shift 2
                 ;;
             --node-id|-n)
@@ -359,20 +370,10 @@ ensure_systemd() {
     fi
 }
 
-migrate_legacy_install_root() {
-    if [ "$INSTALL_ROOT" = "$LEGACY_INSTALL_ROOT" ]; then
-        return
-    fi
-    if [ -d "$INSTALL_ROOT" ]; then
-        if [ -d "$LEGACY_INSTALL_ROOT" ]; then
-            log_warn "Legacy config directory still exists: ${LEGACY_INSTALL_ROOT}"
-            log_warn "Keeping current install root: ${INSTALL_ROOT}"
-        fi
-        return
-    fi
-    if [ -d "$LEGACY_INSTALL_ROOT" ]; then
-        log_step "Migrating config directory: ${LEGACY_INSTALL_ROOT} -> ${INSTALL_ROOT}"
-        mv "$LEGACY_INSTALL_ROOT" "$INSTALL_ROOT"
+check_legacy_installation() {
+    if [ -f /etc/systemd/system/xboard-node.service ] || [ -x /usr/local/bin/xboard-node ] || systemctl is-active xboard-node.service >/dev/null 2>&1; then
+        log_error "Old node installation detected. XBnpp requires a fresh installation; back up and uninstall the old node first. No automatic migration is performed."
+        exit 1
     fi
 }
 
@@ -488,12 +489,12 @@ select_binary_source() {
         echo "$BINARY_SOURCE"
         return
     fi
-    if [ -f "./xboard-node" ]; then
-        echo "./xboard-node"
+    if [ -f "./XBnpp" ]; then
+        echo "./XBnpp"
         return
     fi
-    if [ -f "./xboard-node-linux-${ARCH}" ]; then
-        echo "./xboard-node-linux-${ARCH}"
+    if [ -f "./XBnpp-linux-${ARCH}" ]; then
+        echo "./XBnpp-linux-${ARCH}"
         return
     fi
     echo ""
@@ -509,14 +510,14 @@ resolve_download_url() {
 }
 
 stage_binary() {
-    local staged="$TMP_DIR/xboard-node"
+    local staged="$TMP_DIR/XBnpp"
     local local_src
     local_src=$(select_binary_source)
     if [ -n "$local_src" ]; then
         log_step "Using local binary: ${local_src}"
         cp "$local_src" "$staged"
     else
-        resolve_download_url "xboard-node-linux-${ARCH}"
+        resolve_download_url "XBnpp-linux-${ARCH}"
         log_step "Downloading binary: ${DOWNLOAD_URL}"
         if ! curl -fsSL "$DOWNLOAD_URL" -o "$staged"; then
             log_error "Failed to download binary from ${DOWNLOAD_URL}"
@@ -598,6 +599,7 @@ render_config() {
     fi
 
     local output
+    init_args+=("${WATCH_ARGS[@]}")
     output=$("$TMP_DIR/xbctl" "${init_args[@]}") || {
         log_error "xbctl config init failed"
         exit 1
@@ -610,8 +612,8 @@ render_config() {
 render_service() {
     cat >"$TMP_DIR/${SERVICE_NAME}" <<EOF_UNIT
 [Unit]
-Description=Xboard Node Backend
-Documentation=https://github.com/kele812/xbn-plus-plus
+Description=XBnpp Node Backend
+Documentation=https://github.com/kele812/XBnpp
 After=network-online.target
 Wants=network-online.target
 
@@ -636,7 +638,7 @@ backup_existing_state() {
     BACKUP_PATH="${BACKUP_DIR}/$(date +%Y%m%d-%H%M%S)"
     mkdir -p "$BACKUP_PATH"
     if [ -x "$BINARY_PATH" ]; then
-        cp "$BINARY_PATH" "$BACKUP_PATH/xboard-node"
+        cp "$BINARY_PATH" "$BACKUP_PATH/XBnpp"
     fi
     if [ -x "$CLI_PATH" ]; then
         cp "$CLI_PATH" "$BACKUP_PATH/xbctl"
@@ -666,7 +668,7 @@ stop_existing_service() {
 
 install_staged_files() {
     stop_existing_service
-    install -m 755 "$TMP_DIR/xboard-node" "$BINARY_PATH"
+    install -m 755 "$TMP_DIR/XBnpp" "$BINARY_PATH"
     install -m 600 "$TMP_DIR/config.yml" "$CONFIG_FILE"
     install -m 600 "$TMP_DIR/credentials.env" "$CREDENTIALS_FILE"
     install -m 644 "$TMP_DIR/install-meta.json" "$INSTALL_META"
@@ -758,7 +760,7 @@ perform_upgrade() {
     stage_xbctl
     render_service
     backup_existing_state
-    install -m 755 "$TMP_DIR/xboard-node" "$BINARY_PATH"
+    install -m 755 "$TMP_DIR/XBnpp" "$BINARY_PATH"
     install -m 755 "$TMP_DIR/xbctl" "$CLI_PATH"
     ln -sf "$CLI_PATH" /usr/bin/xbctl 2>/dev/null || true
     install -m 644 "$TMP_DIR/${SERVICE_NAME}" "$SERVICE_PATH"
@@ -848,8 +850,10 @@ main() {
     detect_arch
     detect_os
     ensure_systemd
+    case "$ACTION" in
+        install|upgrade) check_legacy_installation ;;
+    esac
     install_dependencies
-    migrate_legacy_install_root
 
     case "$ACTION" in
         install)

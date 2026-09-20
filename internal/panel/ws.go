@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/cedar2025/xboard-node/internal/nlog"
+	"github.com/kele812/XBnpp/internal/nlog"
 	"github.com/gorilla/websocket"
 )
 

@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-const defaultNginxTrojanSNIPath = "/etc/nginx/stream.d/xboard-node-trojan-sni.conf"
+const defaultNginxTrojanSNIPath = "/etc/nginx/stream.d/XBnpp-trojan-sni.conf"
 
 type nginxTrojanSNIOptions struct {
 	Domain         string
@@ -176,7 +176,7 @@ Optional:
   --format full|snippet        include outer stream {} block or not (default full)
   --proxy-protocol             pass PROXY protocol to upstreams
   --output PATH, -o PATH       output path when --write is used
-  --write                      write config to /etc/nginx/stream.d/xboard-node-trojan-sni.conf
+  --write                      write config to /etc/nginx/stream.d/XBnpp-trojan-sni.conf
   --force                      overwrite existing output
   --test                       run nginx -t after output/write
   --reload                     run nginx -s reload after output/write`)

@@ -81,7 +81,7 @@ func TestRenderNginxCamouflageSite(t *testing.T) {
 	got, err := renderNginxCamouflageSite(nginxCamouflageOptions{
 		Domain: "sg3.oone.us",
 		Listen: "127.0.0.1:8080",
-		Root:   "/var/www/xboard-node-camouflage",
+		Root:   "/var/www/XBnpp-camouflage",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -90,7 +90,7 @@ func TestRenderNginxCamouflageSite(t *testing.T) {
 	for _, want := range []string{
 		"server_name sg3.oone.us;",
 		"listen 127.0.0.1:8080;",
-		"root /var/www/xboard-node-camouflage;",
+		"root /var/www/XBnpp-camouflage;",
 		"try_files $uri $uri/ /index.html;",
 	} {
 		if !strings.Contains(got, want) {

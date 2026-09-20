@@ -19,8 +19,8 @@ import (
 	"github.com/xtls/xray-core/features/routing"
 	"github.com/xtls/xray-core/transport"
 
-	"github.com/cedar2025/xboard-node/internal/accesslog"
-	"github.com/cedar2025/xboard-node/internal/nlog"
+	"github.com/kele812/XBnpp/internal/accesslog"
+	"github.com/kele812/XBnpp/internal/nlog"
 )
 
 const maxAccessEvents = 100

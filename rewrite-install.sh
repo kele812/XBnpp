@@ -2,8 +2,8 @@
 set -euo pipefail
 
 OLD_URL="https://raw.githubusercontent.com/cedar2025/xboard-node/dev/install.sh"
-NEW_URL="https://raw.githubusercontent.com/kele812/xbn-plus-plus/main/install.sh"
-REPO_URL="https://github.com/kele812/xbn-plus-plus.git"
+NEW_URL="https://raw.githubusercontent.com/kele812/XBnpp/main/install.sh"
+REPO_URL="https://github.com/kele812/XBnpp.git"
 REPO_BRANCH="main"
 PRINT_ONLY=0
 

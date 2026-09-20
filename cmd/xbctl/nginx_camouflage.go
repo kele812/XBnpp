@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	defaultNginxCamouflagePath = "/etc/nginx/conf.d/xboard-node-camouflage.conf"
-	defaultCamouflageRoot      = "/var/www/xboard-node-camouflage"
+	defaultNginxCamouflagePath = "/etc/nginx/conf.d/XBnpp-camouflage.conf"
+	defaultCamouflageRoot      = "/var/www/XBnpp-camouflage"
 )
 
 type nginxCamouflageOptions struct {
@@ -225,10 +225,10 @@ Required:
 
 Optional:
   --listen ADDR:PORT           local HTTP listen address (default 127.0.0.1:8080)
-  --root PATH                  static site root (default /var/www/xboard-node-camouflage)
+  --root PATH                  static site root (default /var/www/XBnpp-camouflage)
   --template NAME              random|cloud|studio|docs|commerce|status (default random)
   --output PATH, -o PATH       nginx config path when --write is used
-  --write                      write site and /etc/nginx/conf.d/xboard-node-camouflage.conf
+  --write                      write site and /etc/nginx/conf.d/XBnpp-camouflage.conf
   --force                      overwrite existing output
   --test                       run nginx -t after output/write
   --reload                     run nginx -s reload after output/write`)

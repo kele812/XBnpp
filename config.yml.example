@@ -1,4 +1,4 @@
-# Xboard Node Configuration
+# XBnpp Configuration
 # Top-level settings are inherited by all instances. Instance overrides take precedence.
 
 # ── Single node (simplest) ──
@@ -30,7 +30,7 @@
 #     log:
 #       level: "debug"   # override for this instance only
 
-# xbn plus ++: SubscriptionWatch >= 3.8.0, optional; empty values disable collection.
+# XBnpp: SubscriptionWatch >= 3.8.0, optional; empty values disable collection.
 # Multi-panel instances must put their own watch_access block inside each instance.
 watch_access:
   url: ""

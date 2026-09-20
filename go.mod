@@ -1,4 +1,4 @@
-module github.com/cedar2025/xboard-node
+module github.com/kele812/XBnpp
 
 go 1.26
 

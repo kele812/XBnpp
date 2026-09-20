@@ -14,14 +14,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/cedar2025/xboard-node/internal/config"
-	"github.com/cedar2025/xboard-node/internal/machine"
-	"github.com/cedar2025/xboard-node/internal/nlog"
-	"github.com/cedar2025/xboard-node/internal/service"
+	"github.com/kele812/XBnpp/internal/config"
+	"github.com/kele812/XBnpp/internal/machine"
+	"github.com/kele812/XBnpp/internal/nlog"
+	"github.com/kele812/XBnpp/internal/service"
 )
 
 var (
-	version   = "1.0.0"
+	version   = "1.0.1"
 	buildTime = "unknown"
 )
 
@@ -31,7 +31,7 @@ func main() {
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Printf("xbn plus ++ %s (built %s)\n", version, buildTime)
+		fmt.Printf("XBnpp %s (built %s)\n", version, buildTime)
 		os.Exit(0)
 	}
 

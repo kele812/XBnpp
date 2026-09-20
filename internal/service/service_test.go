@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cedar2025/xboard-node/internal/accesslog"
-	"github.com/cedar2025/xboard-node/internal/cert"
-	"github.com/cedar2025/xboard-node/internal/config"
-	"github.com/cedar2025/xboard-node/internal/kernel"
-	"github.com/cedar2025/xboard-node/internal/limiter"
-	"github.com/cedar2025/xboard-node/internal/model"
+	"github.com/kele812/XBnpp/internal/accesslog"
+	"github.com/kele812/XBnpp/internal/cert"
+	"github.com/kele812/XBnpp/internal/config"
+	"github.com/kele812/XBnpp/internal/kernel"
+	"github.com/kele812/XBnpp/internal/limiter"
+	"github.com/kele812/XBnpp/internal/model"
 	"golang.org/x/time/rate"
 )
 

@@ -15,7 +15,7 @@ import (
 
 	"github.com/caddyserver/certmagic"
 
-	"github.com/cedar2025/xboard-node/internal/config"
+	"github.com/kele812/XBnpp/internal/config"
 )
 
 // generateSelfSignedPair returns a fresh self-signed certificate and matching

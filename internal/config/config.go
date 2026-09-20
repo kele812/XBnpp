@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cedar2025/xboard-node/internal/nlog"
-	"github.com/cedar2025/xboard-node/internal/watchaccess"
+	"github.com/kele812/XBnpp/internal/nlog"
+	"github.com/kele812/XBnpp/internal/watchaccess"
 	"golang.org/x/term"
 	"gopkg.in/yaml.v3"
 )
@@ -316,7 +316,7 @@ func (rc *RootConfig) assignInstanceIDs() error {
 func configBaseDir(configPath string) string {
 	abs, err := filepath.Abs(configPath)
 	if err != nil {
-		return "/etc/XboardNode-Plus"
+		return "/etc/XBnpp"
 	}
 	return filepath.Dir(abs)
 }

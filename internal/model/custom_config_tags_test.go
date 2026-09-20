@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cedar2025/xboard-node/internal/config"
-	"github.com/cedar2025/xboard-node/internal/panel"
+	"github.com/kele812/XBnpp/internal/config"
+	"github.com/kele812/XBnpp/internal/panel"
 )
 
 func TestNodeSpecFromPanelValidated_AllowsTargetsFromCustomConfigOutbounds(t *testing.T) {

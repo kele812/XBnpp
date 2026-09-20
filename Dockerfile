@@ -5,7 +5,7 @@ FROM --platform=$BUILDPLATFORM golang:1.26.8-alpine AS builder
 
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
-ARG VERSION=1.0.0
+ARG VERSION=1.0.1
 ARG BUILD_TIME=unknown
 
 RUN apk add --no-cache git
@@ -21,21 +21,21 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -p 2 -ldflags "-s -
     -X main.version=$VERSION \
     -X main.buildTime=$BUILD_TIME" \
     -tags "with_quic with_utls with_wireguard with_clash_api" \
-    -o xboard-node ./cmd/xboard-node
+    -o XBnpp ./cmd/XBnpp
 
 # Runtime stage — sing-box & xray-core are embedded as Go libraries
 FROM alpine:3.20
-LABEL org.opencontainers.image.title="xbn plus ++" \
-      org.opencontainers.image.source="https://github.com/kele812/xbn-plus-plus" \
+LABEL org.opencontainers.image.title="XBnpp" \
+      org.opencontainers.image.source="https://github.com/kele812/XBnpp" \
       org.opencontainers.image.licenses="MPL-2.0"
 
 RUN apk add --no-cache ca-certificates tzdata
 
-COPY --from=builder /build/xboard-node /usr/local/bin/xboard-node
+COPY --from=builder /build/XBnpp /usr/local/bin/XBnpp
 
-RUN mkdir -p /etc/XboardNode-Plus
+RUN mkdir -p /etc/XBnpp
 
-WORKDIR /etc/XboardNode-Plus
+WORKDIR /etc/XBnpp
 
 # Config can be provided via file mount OR environment variables.
 # Env var mode (no config file needed):
@@ -43,7 +43,7 @@ WORKDIR /etc/XboardNode-Plus
 #     -e apiHost=https://panel.example.com \
 #     -e apiKey=YOUR_TOKEN \
 #     -e nodeID=1 \
-#     ghcr.io/kele812/xbn-plus-plus:latest
+#     ghcr.io/kele812/xbnpp:latest
 #
 # Supported env vars:
 #   apiHost  / API_HOST    → panel URL
@@ -56,5 +56,5 @@ WORKDIR /etc/XboardNode-Plus
 #   keyFile  / KEY_FILE    → TLS key path
 #   logLevel / LOG_LEVEL   → log level
 
-ENTRYPOINT ["xboard-node"]
-CMD ["-c", "/etc/XboardNode-Plus/config.yml"]
+ENTRYPOINT ["XBnpp"]
+CMD ["-c", "/etc/XBnpp/config.yml"]

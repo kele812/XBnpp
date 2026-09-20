@@ -23,10 +23,10 @@ import (
 
 	"github.com/caddyserver/certmagic"
 
-	"github.com/cedar2025/xboard-node/internal/cert/dnsproviders"
-	"github.com/cedar2025/xboard-node/internal/config"
-	"github.com/cedar2025/xboard-node/internal/kernel"
-	"github.com/cedar2025/xboard-node/internal/nlog"
+	"github.com/kele812/XBnpp/internal/cert/dnsproviders"
+	"github.com/kele812/XBnpp/internal/config"
+	"github.com/kele812/XBnpp/internal/kernel"
+	"github.com/kele812/XBnpp/internal/nlog"
 )
 
 // Manager handles TLS certificate lifecycle.

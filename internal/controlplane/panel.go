@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cedar2025/xboard-node/internal/config"
-	"github.com/cedar2025/xboard-node/internal/model"
-	"github.com/cedar2025/xboard-node/internal/nlog"
-	"github.com/cedar2025/xboard-node/internal/panel"
+	"github.com/kele812/XBnpp/internal/config"
+	"github.com/kele812/XBnpp/internal/model"
+	"github.com/kele812/XBnpp/internal/nlog"
+	"github.com/kele812/XBnpp/internal/panel"
 )
 
 type PanelControlPlane struct {

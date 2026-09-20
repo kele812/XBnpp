@@ -1,7 +1,7 @@
 services:
-  xbn-plus-plus:
-    image: ghcr.io/kele812/xbn-plus-plus:1.0.0
-    container_name: xbn-plus-plus
+  XBnpp:
+    image: ghcr.io/kele812/xbnpp:1.0.1
+    container_name: XBnpp
     restart: always
     network_mode: host
     environment:
@@ -13,6 +13,6 @@ services:
       WATCH_ACCESS_NODE: ${WATCH_ACCESS_NODE:-}
       WATCH_ACCESS_SECRET: ${WATCH_ACCESS_SECRET:-}
     volumes:
-      - node-data:/etc/XboardNode-Plus
+      - node-data:/etc/XBnpp
 volumes:
   node-data:

@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-APP_NAME="xbn plus ++"
-REPO="kele812/xbn-plus-plus"
-INSTALL_ROOT="/etc/XboardNode-Plus"
+APP_NAME="XBnpp"
+REPO="kele812/XBnpp"
+INSTALL_ROOT="/etc/XBnpp"
 CONFIG_FILE="${INSTALL_ROOT}/config.yml"
 CREDENTIALS_FILE="${INSTALL_ROOT}/credentials.env"
 META_FILE="${INSTALL_ROOT}/install-meta.json"
-BINARY_PATH="/usr/local/bin/xboard-node"
+BINARY_PATH="/usr/local/bin/XBnpp"
 CLI_PATH="/usr/local/bin/xbctl"
-SERVICE_NAME="xboard-node.service"
+SERVICE_NAME="XBnpp.service"
 SERVICE_PATH="/etc/systemd/system/${SERVICE_NAME}"
 
 MODE="machine"
@@ -33,7 +33,7 @@ die() { log ERROR "$1" >&2; exit 1; }
 
 usage() {
     cat <<'HELP'
-xbn plus ++ easy installer
+XBnpp easy installer
 
 Usage:
   sudo bash easy-install.sh --panel URL --token TOKEN --machine-id ID --domain DOMAIN
@@ -57,7 +57,7 @@ Options:
   --help                       Show help
 
 Example:
-  curl -fL https://github.com/kele812/xbn-plus-plus/releases/latest/download/easy-install.sh | sudo bash -s -- \
+  curl -fL https://github.com/kele812/XBnpp/releases/latest/download/easy-install.sh | sudo bash -s -- \
     --panel https://www.baiyunfast.com \
     --token YOUR_TOKEN \
     --machine-id 12 \
@@ -162,7 +162,7 @@ EOF_NGINX_STREAM
 write_service() {
     cat > "$SERVICE_PATH" <<EOF_SERVICE
 [Unit]
-Description=Xboard Node Backend
+Description=XBnpp Node Backend
 Documentation=https://github.com/${REPO}
 After=network-online.target
 Wants=network-online.target
@@ -214,13 +214,13 @@ render_config() {
 
 install_node() {
     mkdir -p "$INSTALL_ROOT"
-    download_asset "xboard-node-linux-${ARCH}" "$TMP_DIR/xboard-node"
+    download_asset "XBnpp-linux-${ARCH}" "$TMP_DIR/XBnpp"
     download_asset "xbctl-linux-${ARCH}" "$TMP_DIR/xbctl"
 
     render_config
 
     systemctl stop "$SERVICE_NAME" >/dev/null 2>&1 || true
-    install -m 755 "$TMP_DIR/xboard-node" "$BINARY_PATH"
+    install -m 755 "$TMP_DIR/XBnpp" "$BINARY_PATH"
     install -m 755 "$TMP_DIR/xbctl" "$CLI_PATH"
     ln -sf "$CLI_PATH" /usr/bin/xbctl 2>/dev/null || true
     install -m 600 "$TMP_DIR/config.yml" "$CONFIG_FILE"
@@ -251,6 +251,11 @@ configure_nginx() {
         --web-upstream "$WEB_UPSTREAM" \
         --write --force --test --reload
 }
+
+if [ -f /etc/systemd/system/xboard-node.service ] || [ -x /usr/local/bin/xboard-node ] || systemctl is-active xboard-node.service >/dev/null 2>&1; then
+    log ERROR "Old node installation detected. Back up and uninstall it first; XBnpp does not migrate old installations."
+    exit 1
+fi
 
 install_packages
 ensure_nginx_stream_include

@@ -21,7 +21,7 @@ instances:
       token_env: "MACHINE_TOKEN"
     kernel:
       type: "singbox"
-      config_dir: "/etc/XboardNode-Plus/instances/machine-12"
+      config_dir: "/etc/XBnpp/instances/machine-12"
     log:
       level: "info"
       output: "stdout"

@@ -6,10 +6,10 @@ import (
 	"encoding/pem"
 	"testing"
 
-	"github.com/cedar2025/xboard-node/internal/config"
-	"github.com/cedar2025/xboard-node/internal/kernel"
-	"github.com/cedar2025/xboard-node/internal/model"
-	"github.com/cedar2025/xboard-node/internal/panel"
+	"github.com/kele812/XBnpp/internal/config"
+	"github.com/kele812/XBnpp/internal/kernel"
+	"github.com/kele812/XBnpp/internal/model"
+	"github.com/kele812/XBnpp/internal/panel"
 )
 
 var testKernelCfg = config.KernelConfig{

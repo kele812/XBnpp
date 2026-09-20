@@ -1,10 +1,10 @@
 FROM alpine:3.20
 ARG TARGETARCH
-LABEL org.opencontainers.image.title="xbn plus ++" \
-      org.opencontainers.image.source="https://github.com/kele812/xbn-plus-plus" \
+LABEL org.opencontainers.image.title="XBnpp" \
+      org.opencontainers.image.source="https://github.com/kele812/XBnpp" \
       org.opencontainers.image.licenses="MPL-2.0"
-RUN apk add --no-cache ca-certificates tzdata && mkdir -p /etc/XboardNode-Plus
-COPY --chmod=755 dist/xboard-node-linux-${TARGETARCH} /usr/local/bin/xboard-node
-WORKDIR /etc/XboardNode-Plus
-ENTRYPOINT ["xboard-node"]
-CMD ["-c", "/etc/XboardNode-Plus/config.yml"]
+RUN apk add --no-cache ca-certificates tzdata && mkdir -p /etc/XBnpp
+COPY --chmod=755 dist/XBnpp-linux-${TARGETARCH} /usr/local/bin/XBnpp
+WORKDIR /etc/XBnpp
+ENTRYPOINT ["XBnpp"]
+CMD ["-c", "/etc/XBnpp/config.yml"]

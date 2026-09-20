@@ -17,25 +17,25 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/cedar2025/xboard-node/internal/config"
-	"github.com/cedar2025/xboard-node/internal/watchaccess"
+	"github.com/kele812/XBnpp/internal/config"
+	"github.com/kele812/XBnpp/internal/watchaccess"
 	"gopkg.in/yaml.v3"
 )
 
 const (
-	defaultConfigPath      = "/etc/XboardNode-Plus/config.yml"
-	defaultMetaPath        = "/etc/XboardNode-Plus/install-meta.json"
-	defaultCredentialsPath = "/etc/XboardNode-Plus/credentials.env"
-	defaultBinaryPath      = "/usr/local/bin/xboard-node"
+	defaultConfigPath      = "/etc/XBnpp/config.yml"
+	defaultMetaPath        = "/etc/XBnpp/install-meta.json"
+	defaultCredentialsPath = "/etc/XBnpp/credentials.env"
+	defaultBinaryPath      = "/usr/local/bin/XBnpp"
 	defaultCLIPath         = "/usr/local/bin/xbctl"
-	serviceName            = "xboard-node.service"
-	serviceFilePath        = "/etc/systemd/system/xboard-node.service"
-	defaultInstallRoot     = "/etc/XboardNode-Plus"
-	downloadBase           = "https://github.com/kele812/xbn-plus-plus/releases"
+	serviceName            = "XBnpp.service"
+	serviceFilePath        = "/etc/systemd/system/XBnpp.service"
+	defaultInstallRoot     = "/etc/XBnpp"
+	downloadBase           = "https://github.com/kele812/XBnpp/releases"
 )
 
 var (
-	version   = "1.0.0"
+	version   = "1.0.1"
 	buildTime = "unknown"
 )
 
@@ -215,6 +215,8 @@ func printUsage() {
   xbctl health
   xbctl bind add-node --panel-url URL --token TOKEN --node-id ID [--node-type TYPE] [--kernel auto|singbox|xray]
   xbctl bind add-machine --panel-url URL --token TOKEN --machine-id ID [--kernel auto|singbox|xray]
+    Optional collector flags for add-node/add-machine: --watch-url URL --watch-node ID --watch-secret SECRET (all three required)
+  xbctl bind set-watch --instance-id ID --watch-url URL --watch-node ID --watch-secret SECRET
   xbctl bind remove <instance-id>
   xbctl bind remove-node --panel URL --node-id ID
   xbctl bind remove-machine --panel URL --machine-id ID
@@ -232,7 +234,7 @@ shortcuts:
 }
 
 func runStatus() error {
-	fmt.Println("xbn plus ++ status")
+	fmt.Println("XBnpp status")
 	fmt.Println()
 
 	// Version from install-meta.json
@@ -338,7 +340,7 @@ func runHealth() error {
 
 func runBind(args []string) error {
 	if len(args) == 0 {
-		return errors.New("usage: xbctl bind <add-node|add-machine|remove-node|remove-machine> ...")
+		return errors.New("usage: xbctl bind <add-node|add-machine|set-watch|remove-node|remove-machine> ...")
 	}
 	if err := ensureRoot("bind"); err != nil {
 		return err
@@ -350,6 +352,8 @@ func runBind(args []string) error {
 		return runBindAdd("node", rest)
 	case "add-machine":
 		return runBindAdd("machine", rest)
+	case "set-watch":
+		return runBindSetWatch(rest)
 	case "remove-node":
 		panel, nodeID, err := parseRemoveNodeArgs(rest)
 		if err != nil {
@@ -420,10 +424,10 @@ func runUpgrade(args []string) error {
 
 	binaryDir := filepath.Dir(defaultBinaryPath)
 	cliDir := filepath.Dir(defaultCLIPath)
-	newBinary := filepath.Join(binaryDir, ".xboard-node.new")
+	newBinary := filepath.Join(binaryDir, ".XBnpp.new")
 	newCLI := filepath.Join(cliDir, ".xbctl.new")
 
-	binaryURL := resolveDownloadURL(fmt.Sprintf("xboard-node-linux-%s", arch), version)
+	binaryURL := resolveDownloadURL(fmt.Sprintf("XBnpp-linux-%s", arch), version)
 	cliURL := resolveDownloadURL(fmt.Sprintf("xbctl-linux-%s", arch), version)
 
 	fmt.Printf("Downloading %s...\n", binaryURL)
@@ -1182,8 +1186,8 @@ func latestInstanceID(instances []*config.Config) string {
 
 func regenerateServiceFile() error {
 	unit := fmt.Sprintf(`[Unit]
-Description=Xboard Node Backend
-Documentation=https://github.com/kele812/xbn-plus-plus
+Description=XBnpp Node Backend
+Documentation=https://github.com/kele812/XBnpp
 After=network-online.target
 Wants=network-online.target
 
@@ -1240,6 +1244,10 @@ func runConfig(args []string) error {
 //	INSTANCE_ID=<generated-id>
 //	ENV_KEY=<credential-env-var-name>
 func runConfigInit(args []string) error {
+	args, watchConfig, watchErr := parseWatchArgs(args)
+	if watchErr != nil {
+		return watchErr
+	}
 	var (
 		configIn       string
 		configOut      string
@@ -1358,6 +1366,9 @@ func runConfigInit(args []string) error {
 		Log:        config.LogConfig{Level: "info", Output: "stdout"},
 		HealthPort: healthPort,
 	}
+	if watchConfig != nil {
+		inst.WatchAccess = *watchConfig
+	}
 
 	if mode == "machine" {
 		inst.Machine = &config.MachineConfig{MachineID: machineID}
@@ -1376,7 +1387,7 @@ func runConfigInit(args []string) error {
 	inst.InstanceID = instanceID
 
 	if installRoot == "" {
-		installRoot = "/etc/XboardNode-Plus"
+		installRoot = "/etc/XBnpp"
 	}
 	inst.Kernel.ConfigDir = filepath.Join(installRoot, "instances", instanceID)
 
@@ -1404,6 +1415,8 @@ func runConfigInit(args []string) error {
 		if loaded, loadErr := loadWritableRootConfig(configIn); loadErr == nil {
 			root = loaded
 			hasExisting = len(root.Instances) > 0 || root.Config.Panel.URL != "" || root.Config.Kernel.Type != ""
+		} else if !errors.Is(loadErr, os.ErrNotExist) {
+			return errors.New("cannot read existing config; no changes saved")
 		}
 	}
 
@@ -1434,6 +1447,9 @@ func runConfigInit(args []string) error {
 	replaced := false
 	for i, existing := range instances {
 		if existing.InstanceID == instanceID {
+			if watchConfig == nil {
+				inst.WatchAccess = existing.WatchAccess
+			}
 			instances[i] = inst
 			replaced = true
 			break

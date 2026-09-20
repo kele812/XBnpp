@@ -1,4 +1,4 @@
-VERSION ?= 1.0.0
+VERSION ?= 1.0.1
 BUILD_TIME ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 LDFLAGS := -s -w -X main.version=$(VERSION) -X main.buildTime=$(BUILD_TIME) -X main.commit=$(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 
@@ -6,17 +6,17 @@ LDFLAGS := -s -w -X main.version=$(VERSION) -X main.buildTime=$(BUILD_TIME) -X m
 
 # Build for current platform
 build:
-	go build -ldflags "$(LDFLAGS)" -tags "with_quic with_utls with_wireguard with_clash_api" -o xboard-node ./cmd/xboard-node
+	go build -ldflags "$(LDFLAGS)" -tags "with_quic with_utls with_wireguard with_clash_api" -o XBnpp ./cmd/XBnpp
 	go build -ldflags "$(LDFLAGS)" -o xbctl ./cmd/xbctl
 
 # Build for Linux amd64
 build-linux:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -tags "with_quic with_utls with_wireguard with_acme with_clash_api" -o xboard-node-linux-amd64 ./cmd/xboard-node
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -tags "with_quic with_utls with_wireguard with_acme with_clash_api" -o XBnpp-linux-amd64 ./cmd/XBnpp
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o xbctl-linux-amd64 ./cmd/xbctl
 
 # Build for Linux arm64
 build-linux-arm64:
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "$(LDFLAGS)" -tags "with_quic with_utls with_wireguard with_acme with_clash_api" -o xboard-node-linux-arm64 ./cmd/xboard-node
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "$(LDFLAGS)" -tags "with_quic with_utls with_wireguard with_acme with_clash_api" -o XBnpp-linux-arm64 ./cmd/XBnpp
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "$(LDFLAGS)" -o xbctl-linux-arm64 ./cmd/xbctl
 
 # Build all platforms
@@ -28,18 +28,18 @@ test:
 
 # Clean build artifacts
 clean:
-	rm -f xboard-node xbctl xboard-node-linux-* xbctl-linux-*
+	rm -f XBnpp xbctl XBnpp-linux-* xbctl-linux-*
 
 # Build Docker image
 docker:
-	docker build -t xbn-plus-plus:$(VERSION) -t xbn-plus-plus:latest .
+	docker build -t xbnpp:$(VERSION) -t xbnpp:latest .
 
 # Install to system (single node, legacy compat)
 install: build
-	sudo cp xboard-node /usr/local/bin/
+	sudo cp XBnpp /usr/local/bin/
 	sudo cp xbctl /usr/local/bin/
-	sudo mkdir -p /etc/XboardNode-Plus
-	@if [ ! -f /etc/XboardNode-Plus/config.yml ]; then \
-		sudo cp config.yml.example /etc/XboardNode-Plus/config.yml; \
-		echo "Config copied to /etc/XboardNode-Plus/config.yml - please edit it"; \
+	sudo mkdir -p /etc/XBnpp
+	@if [ ! -f /etc/XBnpp/config.yml ]; then \
+		sudo cp config.yml.example /etc/XBnpp/config.yml; \
+		echo "Config copied to /etc/XBnpp/config.yml - please edit it"; \
 	fi

@@ -4,8 +4,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/cedar2025/xboard-node/internal/accesslog"
-	"github.com/cedar2025/xboard-node/internal/model"
+	"github.com/kele812/XBnpp/internal/accesslog"
+	"github.com/kele812/XBnpp/internal/model"
 	"github.com/xtls/xray-core/common/buf"
 	"github.com/xtls/xray-core/transport"
 )

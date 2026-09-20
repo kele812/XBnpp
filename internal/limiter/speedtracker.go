@@ -4,7 +4,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/cedar2025/xboard-node/internal/model"
+	"github.com/kele812/XBnpp/internal/model"
 	"golang.org/x/time/rate"
 )
 

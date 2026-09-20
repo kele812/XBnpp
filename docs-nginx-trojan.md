@@ -50,7 +50,7 @@ xbctl nginx trojan-sni \
 The default write path is:
 
 ```text
-/etc/nginx/stream.d/xboard-node-trojan-sni.conf
+/etc/nginx/stream.d/XBnpp-trojan-sni.conf
 ```
 
 Make sure nginx includes that directory at top level:

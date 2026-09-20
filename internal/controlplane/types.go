@@ -3,8 +3,8 @@ package controlplane
 import (
 	"context"
 
-	"github.com/cedar2025/xboard-node/internal/accesslog"
-	"github.com/cedar2025/xboard-node/internal/model"
+	"github.com/kele812/XBnpp/internal/accesslog"
+	"github.com/kele812/XBnpp/internal/model"
 )
 
 type EventType string

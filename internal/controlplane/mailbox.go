@@ -3,7 +3,7 @@ package controlplane
 import (
 	"sync"
 
-	"github.com/cedar2025/xboard-node/internal/model"
+	"github.com/kele812/XBnpp/internal/model"
 )
 
 // MailboxState is the coalesced snapshot drained from a NodeMailbox.
