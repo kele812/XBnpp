@@ -1,0 +1,38 @@
+# Xboard Node Configuration
+# Top-level settings are inherited by all instances. Instance overrides take precedence.
+
+# ── Single node (simplest) ──
+# panel:
+#   url: "https://panel.example.com"
+#   token: "your-api-key"
+#   node_id: 1
+
+# ── Multiple instances ──
+# kernel:
+#   type: "singbox"
+# log:
+#   level: "info"
+# node:
+#   access_report_interval: 3  # 最近访问目标快速上报间隔，单位秒
+#   # Trojan 本机伪装站 fallback，不需要在后台协议 JSON 里配置。
+#   # 常用值：127.0.0.1:8080，对应本机伪装网站监听端口。
+#   trojan_fallback: "127.0.0.1:8080"
+# instances:
+#   - panel:
+#       url: "https://panel.example.com"
+#       token: "api-key-1"
+#       node_id: 1
+#   - panel:
+#       url: "https://panel.example.com"
+#     machine:
+#       machine_id: 2
+#       token: "machine-token-2"
+#     log:
+#       level: "debug"   # override for this instance only
+
+# xbn plus ++: SubscriptionWatch >= 3.8.0, optional; empty values disable collection.
+# Multi-panel instances must put their own watch_access block inside each instance.
+watch_access:
+  url: ""
+  node: ""
+  secret: ""

@@ -1,0 +1,9 @@
+services:
+  xbn-plus-plus:
+    image: ghcr.io/kele812/xbn-plus-plus:1.0.0
+    container_name: xbn-plus-plus
+    restart: always
+    network_mode: host
+    volumes:
+      - ./node-config:/etc/XboardNode-Plus
+    # 将原有证书挂载原样保留在这里。

@@ -1,0 +1,15 @@
+.git
+.github
+config.yml
+.env
+credentials.env
+*.key
+*.pem
+dist
+xboard-node
+xboard-node-linux-*
+xbctl
+xbctl-linux-*
+*.exe
+*.zip
+*.tar.gz

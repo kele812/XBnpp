@@ -1,0 +1,4 @@
+**
+!dist/
+!dist/xboard-node-linux-amd64
+!dist/xboard-node-linux-arm64

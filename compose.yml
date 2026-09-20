@@ -1,0 +1,18 @@
+services:
+  xbn-plus-plus:
+    image: ghcr.io/kele812/xbn-plus-plus:1.0.0
+    container_name: xbn-plus-plus
+    restart: always
+    network_mode: host
+    environment:
+      apiHost: ${API_HOST:?请在.env填写Xboard地址}
+      apiKey: ${API_KEY:?请在.env填写Xboard节点通信密钥}
+      nodeID: ${NODE_ID:?请在.env填写节点ID}
+      kernel: ${KERNEL_TYPE:-auto}
+      WATCH_ACCESS_URL: ${WATCH_ACCESS_URL:-}
+      WATCH_ACCESS_NODE: ${WATCH_ACCESS_NODE:-}
+      WATCH_ACCESS_SECRET: ${WATCH_ACCESS_SECRET:-}
+    volumes:
+      - node-data:/etc/XboardNode-Plus
+volumes:
+  node-data:
