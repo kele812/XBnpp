@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/hex"
 	"encoding/json"
 	"io"
@@ -82,7 +84,7 @@ func TestSignedPolicyAndUpload(t *testing.T) {
 	}))
 	defer srv.Close()
 	r := newTestReporter(t)
-	r.cfg.URL = srv.URL
+	r.urls = []string{srv.URL}
 	r.client = srv.Client()
 	if e := r.syncPolicy(context.Background()); e != nil {
 		t.Fatal(e)
@@ -109,5 +111,41 @@ func TestConfigRequiresSecureOrigin(t *testing.T) {
 	r, e := New(Config{})
 	if e != nil || r != nil {
 		t.Fatal("disabled config")
+	}
+}
+
+func TestMultipleWatchOriginsFailOverOnlyOnUnavailable(t *testing.T) {
+	var backupCalls int
+	primaryStatus := http.StatusServiceUnavailable
+	primary := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(primaryStatus) }))
+	defer primary.Close()
+	backup := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		backupCalls++
+		io.WriteString(w, `{"users":[],"ttlSeconds":90}`)
+	}))
+	defer backup.Close()
+	r, err := New(Config{URLs: []string{primary.URL, backup.URL}, Node: strings.Repeat("a", 48), Secret: strings.Repeat("b", 48)})
+	if err != nil { t.Fatal(err) }
+	roots := x509.NewCertPool()
+	roots.AddCert(primary.Certificate())
+	roots.AddCert(backup.Certificate())
+	r.client = &http.Client{Timeout: 8 * time.Second, Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: roots}}}
+	if err := r.syncPolicy(context.Background()); err != nil || backupCalls != 1 { t.Fatalf("5xx did not fail over: %v, calls=%d", err, backupCalls) }
+	primaryStatus = http.StatusUnauthorized
+	if err := r.syncPolicy(context.Background()); err == nil || backupCalls != 1 { t.Fatalf("401 incorrectly failed over: %v, calls=%d", err, backupCalls) }
+}
+
+func TestMultipleWatchOriginConfig(t *testing.T) {
+	secret := strings.Repeat("b", 48)
+	node := strings.Repeat("a", 48)
+	r, err := New(Config{URL: "https://one.example.com,https://two.example.com", Node: node, Secret: secret})
+	if err != nil || len(r.urls) != 2 { t.Fatalf("comma-separated origins rejected: %v", err) }
+	r, err = New(Config{URLs: []string{"https://one.example.com", "https://two.example.com"}, Node: node, Secret: secret})
+	if err != nil || len(r.urls) != 2 { t.Fatalf("origin list rejected: %v", err) }
+	for _, cfg := range []Config{
+		{URLs: []string{"https://one.example.com", "http://unsafe.example.com"}, Node: node, Secret: secret},
+		{URL: "https://one.example.com", URLs: []string{"https://two.example.com"}, Node: node, Secret: secret},
+	} {
+		if _, err := New(cfg); err == nil { t.Fatal("invalid origin list accepted") }
 	}
 }

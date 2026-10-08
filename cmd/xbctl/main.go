@@ -35,7 +35,7 @@ const (
 )
 
 var (
-	version   = "1.0.1"
+	version   = "1.0.2"
 	buildTime = "unknown"
 )
 
@@ -215,8 +215,8 @@ func printUsage() {
   xbctl health
   xbctl bind add-node --panel-url URL --token TOKEN --node-id ID [--node-type TYPE] [--kernel auto|singbox|xray]
   xbctl bind add-machine --panel-url URL --token TOKEN --machine-id ID [--kernel auto|singbox|xray]
-    Optional collector flags for add-node/add-machine: --watch-url URL --watch-node ID --watch-secret SECRET (all three required)
-  xbctl bind set-watch --instance-id ID --watch-url URL --watch-node ID --watch-secret SECRET
+    Optional collector flags for add-node/add-machine: --watch-url URL [--watch-url BACKUP_URL] --watch-node ID --watch-secret SECRET
+  xbctl bind set-watch --instance-id ID --watch-url URL [--watch-url BACKUP_URL] --watch-node ID --watch-secret SECRET
   xbctl bind remove <instance-id>
   xbctl bind remove-node --panel URL --node-id ID
   xbctl bind remove-machine --panel URL --machine-id ID
@@ -917,7 +917,7 @@ func writeRootConfig(path string, root *config.RootConfig) error {
 			},
 			HealthPort: inst.HealthPort,
 		}
-		if inst.WatchAccess.URL != "" || inst.WatchAccess.Node != "" || inst.WatchAccess.Secret != "" {
+		if inst.WatchAccess.URL != "" || len(inst.WatchAccess.URLs) > 0 || inst.WatchAccess.Node != "" || inst.WatchAccess.Secret != "" {
 			w := inst.WatchAccess
 			fi.WatchAccess = &w
 		}

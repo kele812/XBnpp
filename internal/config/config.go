@@ -215,7 +215,7 @@ func LoadRoot(path string) (*RootConfig, error) {
 	}
 
 	// In multi-instance mode, top-level settings (log, kernel, node, ws, etc.)
-	if len(rc.Instances) > 0 && (rc.WatchAccess.URL != "" || rc.WatchAccess.Node != "" || rc.WatchAccess.Secret != "") {
+	if len(rc.Instances) > 0 && (rc.WatchAccess.URL != "" || len(rc.WatchAccess.URLs) > 0 || rc.WatchAccess.Node != "" || rc.WatchAccess.Secret != "") {
 		return nil, fmt.Errorf("watch_access must be configured inside each instance, not at the top level")
 	}
 	if len(rc.Instances) > 1 && envFirst("WATCH_ACCESS_URL", "WATCH_ACCESS_NODE", "WATCH_ACCESS_SECRET") != "" {
@@ -405,6 +405,7 @@ func envFirst(names ...string) string {
 func (c *Config) applyEnvOverrides() {
 	if v := envFirst("WATCH_ACCESS_URL"); v != "" {
 		c.WatchAccess.URL = v
+		c.WatchAccess.URLs = nil
 	}
 	if v := envFirst("WATCH_ACCESS_NODE"); v != "" {
 		c.WatchAccess.Node = v

@@ -15,6 +15,7 @@ import (
 func parseWatchArgs(args []string) ([]string, *watchaccess.Config, error) {
 	c := watchaccess.Config{}
 	seen := map[string]bool{}
+	var watchURLs []string
 	var rest []string
 	for i := 0; i < len(args); i++ {
 		key := args[i]
@@ -25,14 +26,14 @@ func parseWatchArgs(args []string) ([]string, *watchaccess.Config, error) {
 		if key != "--watch-url" && key != "--watch-node" && key != "--watch-secret" {
 			return nil, nil, errors.New("unknown watch option; use --watch-url, --watch-node and --watch-secret")
 		}
-		if seen[key] || i+1 >= len(args) || strings.HasPrefix(args[i+1], "--") || args[i+1] == "" {
+		if (seen[key] && key != "--watch-url") || i+1 >= len(args) || strings.HasPrefix(args[i+1], "--") || args[i+1] == "" {
 			return nil, nil, fmt.Errorf("%s requires one non-empty value and must not be repeated", key)
 		}
 		seen[key] = true
 		i++
 		switch key {
 		case "--watch-url":
-			c.URL = args[i]
+			watchURLs = append(watchURLs, args[i])
 		case "--watch-node":
 			c.Node = args[i]
 		case "--watch-secret":
@@ -45,6 +46,7 @@ func parseWatchArgs(args []string) ([]string, *watchaccess.Config, error) {
 	if len(seen) != 3 {
 		return nil, nil, errors.New("provide --watch-url, --watch-node and --watch-secret together")
 	}
+	if len(watchURLs) == 1 { c.URL = watchURLs[0] } else { c.URLs = watchURLs }
 	if _, err := watchaccess.New(c); err != nil {
 		return nil, nil, err
 	}

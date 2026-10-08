@@ -5,7 +5,7 @@ FROM --platform=$BUILDPLATFORM golang:1.26.8-alpine AS builder
 
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
-ARG VERSION=1.0.1
+ARG VERSION=1.0.2
 ARG BUILD_TIME=unknown
 
 RUN apk add --no-cache git

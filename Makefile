@@ -1,4 +1,4 @@
-VERSION ?= 1.0.1
+VERSION ?= 1.0.2
 BUILD_TIME ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 LDFLAGS := -s -w -X main.version=$(VERSION) -X main.buildTime=$(BUILD_TIME) -X main.commit=$(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 

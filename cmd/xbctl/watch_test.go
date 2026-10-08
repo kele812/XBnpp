@@ -29,6 +29,14 @@ func TestWatchArgsRejectInvalid(t *testing.T) {
 	}
 }
 
+func TestWatchArgsMultipleOrigins(t *testing.T) {
+	args := append([]string{"--watch-url", "https://backup.example.com"}, watchTestArgs()...)
+	_, c, err := parseWatchArgs(args)
+	if err != nil || c == nil || len(c.URLs) != 2 || c.URLs[0] != "https://backup.example.com" || c.URLs[1] != "https://watch.example.com" {
+		t.Fatalf("multiple origins not preserved in order: %v, %#v", err, c)
+	}
+}
+
 func TestSetWatchPreservesOtherFieldsAndBacksUp(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.yml")
 	input := `instances:

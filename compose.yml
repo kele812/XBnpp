@@ -1,6 +1,6 @@
 services:
   XBnpp:
-    image: ghcr.io/kele812/xbnpp:1.0.1
+    image: ghcr.io/kele812/xbnpp:1.0.2
     container_name: XBnpp
     restart: always
     network_mode: host

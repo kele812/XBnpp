@@ -23,9 +23,10 @@ import (
 )
 
 type Config struct {
-	URL    string `yaml:"url"`
-	Node   string `yaml:"node"`
-	Secret string `yaml:"secret"`
+	URL    string   `yaml:"url,omitempty"`
+	URLs   []string `yaml:"urls,omitempty"`
+	Node   string   `yaml:"node"`
+	Secret string   `yaml:"secret"`
 }
 type Event struct {
 	ID      string `json:"id"`
@@ -43,6 +44,7 @@ type policy struct {
 }
 type Reporter struct {
 	cfg      Config
+	urls     []string
 	client   *http.Client
 	queue    chan Event
 	policy   atomic.Pointer[policy]
@@ -53,11 +55,11 @@ type Reporter struct {
 }
 
 func New(c Config) (*Reporter, error) {
-	if c.URL == "" && c.Node == "" && c.Secret == "" {
+	if c.URL == "" && len(c.URLs) == 0 && c.Node == "" && c.Secret == "" {
 		return nil, nil
 	}
-	u, err := url.Parse(c.URL)
-	if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || (u.Path != "" && u.Path != "/") || len(c.Node) != 48 || len(c.Secret) != 48 {
+	urls, err := origins(c)
+	if err != nil || len(c.Node) != 48 || len(c.Secret) != 48 {
 		return nil, fmt.Errorf("watch_access requires HTTPS origin, node and secret (48 hex characters)")
 	}
 	if _, err = hex.DecodeString(c.Node); err != nil {
@@ -70,8 +72,34 @@ func New(c Config) (*Reporter, error) {
 	if _, err = rand.Read(seed); err != nil {
 		return nil, err
 	}
-	c.URL = strings.TrimRight(c.URL, "/")
-	return &Reporter{cfg: c, prefix: hex.EncodeToString(seed), queue: make(chan Event, 1000), client: &http.Client{Timeout: 8 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}}, nil
+	return &Reporter{cfg: c, urls: urls, prefix: hex.EncodeToString(seed), queue: make(chan Event, 1000), client: &http.Client{Timeout: 8 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}}, nil
+}
+
+func origins(c Config) ([]string, error) {
+	if c.URL != "" && len(c.URLs) > 0 {
+		return nil, fmt.Errorf("use watch_access.url or watch_access.urls, not both")
+	}
+	values := c.URLs
+	if c.URL != "" {
+		values = strings.FieldsFunc(c.URL, func(r rune) bool { return r == ',' || r == '\n' || r == '\r' || r == ' ' || r == '\t' })
+	}
+	if len(values) == 0 || len(values) > 5 {
+		return nil, fmt.Errorf("watch_access requires 1-5 HTTPS origins")
+	}
+	seen := make(map[string]bool)
+	urls := make([]string, 0, len(values))
+	for _, raw := range values {
+		u, err := url.Parse(strings.TrimSpace(raw))
+		if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.RawQuery != "" || u.ForceQuery || u.Fragment != "" || (u.Path != "" && u.Path != "/") || len(raw) > 255 {
+			return nil, fmt.Errorf("watch_access URLs must be HTTPS roots")
+		}
+		origin := u.Scheme + "://" + u.Host
+		if !seen[origin] {
+			seen[origin] = true
+			urls = append(urls, origin)
+		}
+	}
+	return urls, nil
 }
 
 // Record records a connection target once, not each packet or page request.
@@ -117,24 +145,36 @@ func (r *Reporter) request(ctx context.Context, path string, payload any, result
 	mac := hmac.New(sha256.New, []byte(r.cfg.Secret))
 	mac.Write([]byte(path + "\n" + stamp + "\n"))
 	mac.Write(raw)
-	req, err := http.NewRequestWithContext(ctx, "POST", r.cfg.URL+path, bytes.NewReader(raw))
-	if err != nil {
+	deadline := time.Now().Add(8 * time.Second)
+	var lastErr error
+	for i, origin := range r.urls {
+		remaining := time.Until(deadline)
+		if remaining <= 0 || ctx.Err() != nil { break }
+		attemptCtx, cancel := context.WithTimeout(ctx, remaining/time.Duration(len(r.urls)-i))
+		req, e := http.NewRequestWithContext(attemptCtx, "POST", origin+path, bytes.NewReader(raw))
+		if e != nil { cancel(); return e }
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-Watch-Node", r.cfg.Node)
+		req.Header.Set("X-Watch-Timestamp", stamp)
+		req.Header.Set("X-Watch-Signature", hex.EncodeToString(mac.Sum(nil)))
+		res, e := r.client.Do(req)
+		if e != nil { lastErr = e; cancel(); continue }
+		if res.StatusCode != 200 {
+			io.Copy(io.Discard, io.LimitReader(res.Body, 4096))
+			res.Body.Close()
+			cancel()
+			lastErr = fmt.Errorf("watch access HTTP %d", res.StatusCode)
+			if res.StatusCode >= 500 { continue }
+			return lastErr
+		}
+		err = json.NewDecoder(io.LimitReader(res.Body, 65536)).Decode(result)
+		res.Body.Close()
+		cancel()
 		return err
 	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Watch-Node", r.cfg.Node)
-	req.Header.Set("X-Watch-Timestamp", stamp)
-	req.Header.Set("X-Watch-Signature", hex.EncodeToString(mac.Sum(nil)))
-	res, err := r.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		io.Copy(io.Discard, io.LimitReader(res.Body, 4096))
-		return fmt.Errorf("watch access HTTP %d", res.StatusCode)
-	}
-	return json.NewDecoder(io.LimitReader(res.Body, 65536)).Decode(result)
+	if ctx.Err() != nil { return ctx.Err() }
+	if lastErr != nil { return lastErr }
+	return fmt.Errorf("all watch access origins unavailable")
 }
 func (r *Reporter) syncPolicy(ctx context.Context) error {
 	var b struct {

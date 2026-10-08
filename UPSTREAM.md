@@ -1,6 +1,6 @@
 # 来源与修改
 
-项目显示名称：XBnpp；增强版版本：1.0.1。
+项目显示名称：XBnpp；增强版版本：1.0.2。
 
 基于 [xboardnext999/XboardNode-Plus](https://github.com/xboardnext999/XboardNode-Plus)，固定上游提交 `f2aca7940600207cc75ab4fe0c91003b6bd6dfeb`。该项目源于 [cedar2025/Xboard-Node](https://github.com/cedar2025/Xboard-Node)，上游 README 声明 MPL-2.0；本项目保留此许可证和来源说明。
 
